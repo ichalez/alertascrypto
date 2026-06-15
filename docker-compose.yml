@@ -1,0 +1,13 @@
+services:
+  alertascrypto:
+    build: .
+    container_name: alertascrypto
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/app/data
+    environment:
+      - TZ=Europe/Madrid
+      # Si tu VPS tiene Binance bloqueado, cambia la fuente de datos:
+      # - DATA_BASE=https://api.binance.com

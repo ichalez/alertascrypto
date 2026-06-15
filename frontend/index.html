@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0E1116">
+<title>alertascrypto</title>
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <span class="brand__pulse" aria-hidden="true"></span>
+    <span class="brand__name">alertas<b>crypto</b></span>
+  </div>
+  <button id="masterBtn" class="master" data-running="true">
+    <span class="master__dot"></span><span id="masterTxt">En marcha</span>
+  </button>
+</header>
+
+<main>
+  <!-- ============ PANEL ============ -->
+  <section id="view-panel" class="view view--active">
+    <div id="summary" class="summary">
+      <div class="summary__cell"><span class="summary__n" id="sumBuy">0</span><span class="summary__l">en compra</span></div>
+      <div class="summary__cell"><span class="summary__n" id="sumSell">0</span><span class="summary__l">en venta</span></div>
+      <div class="summary__cell"><span class="summary__n summary__n--mut" id="sumNeu">0</span><span class="summary__l">neutral</span></div>
+    </div>
+    <div id="cards" class="cards">
+      <p class="loading">Conectando con el mercado…</p>
+    </div>
+  </section>
+
+  <!-- ============ AJUSTES ============ -->
+  <section id="view-settings" class="view">
+    <div class="panelcard">
+      <h2 class="panelcard__title">Vigilancia</h2>
+      <label class="row">
+        <span>Frecuencia de comprobación</span>
+        <select id="pollSeconds" class="ctl">
+          <option value="30">cada 30 s</option>
+          <option value="60">cada 60 s</option>
+          <option value="120">cada 2 min</option>
+        </select>
+      </label>
+    </div>
+
+    <div class="panelcard">
+      <h2 class="panelcard__title">Confirmación de tendencia</h2>
+      <label class="row row--switch">
+        <span>Filtrar señales contra-tendencia<small>Solo avisa si la temporalidad mayor acompaña</small></span>
+        <input type="checkbox" id="mtfFilter" class="switch">
+      </label>
+      <label class="row">
+        <span>Temporalidad mayor</span>
+        <select id="mtfInterval" class="ctl">
+          <option value="15m">15 minutos</option>
+          <option value="1h">1 hora</option>
+          <option value="4h">4 horas</option>
+        </select>
+      </label>
+    </div>
+
+    <div class="panelcard">
+      <h2 class="panelcard__title">Stop y objetivo (por ATR)</h2>
+      <label class="row">
+        <span>Distancia del stop<small>Múltiplo del ATR (volatilidad)</small></span>
+        <select id="stopMult" class="ctl">
+          <option value="1">1× ATR (ajustado)</option>
+          <option value="1.5">1.5× ATR</option>
+          <option value="2">2× ATR (holgado)</option>
+        </select>
+      </label>
+      <label class="row">
+        <span>Ratio riesgo:beneficio</span>
+        <select id="rrRatio" class="ctl">
+          <option value="1.5">1 : 1.5</option>
+          <option value="2">1 : 2</option>
+          <option value="3">1 : 3</option>
+        </select>
+      </label>
+    </div>
+
+    <div class="panelcard">
+      <h2 class="panelcard__title">Horario silencioso</h2>
+      <label class="row row--switch">
+        <span>Silenciar avisos de noche<small>Se registran, pero no notifican</small></span>
+        <input type="checkbox" id="quietEnabled" class="switch">
+      </label>
+      <div class="row">
+        <span>Desde</span>
+        <input type="time" id="quietStart" class="ctl ctl--time">
+        <span class="row__mid">hasta</span>
+        <input type="time" id="quietEnd" class="ctl ctl--time">
+      </div>
+    </div>
+
+    <div class="panelcard">
+      <h2 class="panelcard__title">Telegram</h2>
+      <label class="field"><span>Token del bot</span>
+        <input type="text" id="tgToken" class="ctl ctl--full" placeholder="123456:ABC-..." autocomplete="off"></label>
+      <label class="field"><span>Chat ID</span>
+        <input type="text" id="tgChat" class="ctl ctl--full" placeholder="tu chat id" autocomplete="off"></label>
+    </div>
+
+    <div class="panelcard">
+      <h2 class="panelcard__title">Avisos</h2>
+      <label class="row row--switch"><span>Telegram</span><input type="checkbox" id="chTelegram" class="switch"></label>
+      <label class="row row--switch"><span>Notificaciones push</span><input type="checkbox" id="chPush" class="switch"></label>
+      <div class="btnrow">
+        <button id="pushBtn" class="btn btn--ghost">Activar push en este móvil</button>
+        <button id="testBtn" class="btn btn--ghost">Enviar prueba</button>
+      </div>
+      <p id="testMsg" class="hint"></p>
+    </div>
+
+    <div class="panelcard">
+      <h2 class="panelcard__title">Activos y umbrales</h2>
+      <div id="assetList" class="assetlist"></div>
+    </div>
+
+    <div class="savebar">
+      <button id="saveBtn" class="btn btn--primary">Guardar cambios</button>
+    </div>
+  </section>
+
+  <!-- ============ HISTORIAL ============ -->
+  <section id="view-history" class="view">
+    <div class="histhead">
+      <h2 class="panelcard__title">Últimas alarmas</h2>
+      <button id="clearBtn" class="btn btn--ghost btn--sm">Vaciar</button>
+    </div>
+    <div id="history" class="history"><p class="loading">Cargando…</p></div>
+  </section>
+</main>
+
+<nav class="tabbar">
+  <button class="tab tab--active" data-view="panel"><span class="tab__ico">◎</span>Panel</button>
+  <button class="tab" data-view="settings"><span class="tab__ico">⚙</span>Ajustes</button>
+  <button class="tab" data-view="history"><span class="tab__ico">≡</span>Historial</button>
+</nav>
+
+<script src="/app.js"></script>
+</body>
+</html>
